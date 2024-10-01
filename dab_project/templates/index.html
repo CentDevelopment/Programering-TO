@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAB Controller</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .slider {
+            width: 300px;
+        }
+        #confirmButton {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        #confirmButton:hover {
+            background-color: #b31919;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Radio frekvens endrer</h1>
+
+<h2>Nåværende frekvens: <span id="currentFrequency">215</span> MHz</h2>
+<br/>
+<p>Velg ønsket frekvens:</p>
+
+<input type="range" min="174" max="240" value="215" class="slider" id="frequencyRange">
+<p>Valgt frekvens: <span id="frequencyValue">215</span> MHz</p>
+
+<button id="confirmButton">Bekreft</button>
+
+
+
+<script>
+    let slider = document.getElementById("frequencyRange");
+    let output = document.getElementById("frequencyValue");
+    let currentFrequency = document.getElementById("currentFrequency");
+    let confirmButton = document.getElementById("confirmButton");
+
+    slider.oninput = function() {
+        output.innerHTML = this.value;
+    };
+
+    function refreshCurrentFrequency() {
+        fetch('/FAfrekvens')
+        .then(response => response.json())
+        .then(data => {
+            currentFrequency.innerHTML = data.frequency;
+        });
+    };
+
+    confirmButton.onclick = function() {
+        let selectedFrequency = slider.value;
+        fetch('/settFrekvens', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ frequency: selectedFrequency }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+        });
+        refreshCurrentFrequency()
+    }
+</script>
+
+</body>
+</html>

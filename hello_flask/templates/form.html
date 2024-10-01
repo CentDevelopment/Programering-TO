@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Form{% endblock %}
+
+{% block content %}
+    <h1>Fyll inn!</h1>
+    <form method="POST">
+        <label for="firstname">Fornavn:</label><br>
+        <input type="text" id="firstname" name="firstname" required><br>
+
+        <label for="lastname">Etternavn:</label><br>
+        <input type="text" id="lastname" name="lastname" required><br>
+
+        <label for="date">Dato:</label><br>
+        <input type="date" id="date" name="date" required><br>
+
+        <label for="confirm">Bekreft:</label>
+        <input type="checkbox" id="confirm" name="confirm"><br>
+
+        <input type="submit" value="Send">
+    </form>
+{% endblock %}
