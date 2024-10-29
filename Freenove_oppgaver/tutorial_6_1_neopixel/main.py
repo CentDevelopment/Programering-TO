@@ -26,16 +26,16 @@ last_button_direction_state = 0
 debounce_time = 200
 last_press_time = 0
 
-def get_speed_from_pot():
+def verdi_pot():
     pot_value = pot.read_u16()
     return max(20, int(300 - (pot_value / 65535 * 280)))
 
-def change_color():
+def endre_farge():
     global color_index, current_color
     color_index = (color_index + 1) % len(colors)
     current_color = colors[color_index]
 
-def toggle_direction():
+def toggle_dir():
     global direction
     direction = -1 if direction == 1 else 1
 
@@ -56,17 +56,17 @@ def update_ring(position):
 
 try:
     while True:
-        speed = get_speed_from_pot()
+        speed = verdi_pot()
 
         if button_color.value() == 1 and last_button_color_state == 0:
-            change_color()
+            endre_farge()
             time.sleep_ms(debounce_time)
         last_button_color_state = button_color.value()
 
         current_time = time.ticks_ms()
         if button_direction.value() == 1 and last_button_direction_state == 0:
             if time.ticks_diff(current_time, last_press_time) > debounce_time:
-                toggle_direction()
+                toggle_dir()
                 last_press_time = current_time
         last_button_direction_state = button_direction.value()
 
