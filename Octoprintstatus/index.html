@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printer Status Dashboard</title>
+    <style>
+        body { background-color: black; color: white; font-family: Arial, sans-serif; }
+        h1, h2 { text-align: center; color: #fff; }
+        #printers { display: flex; flex-direction: column; align-items: center; }
+        .printers-group { display: flex; flex-wrap: nowrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .printer { background-color: #333; border: 2px solid #555; border-radius: 8px; padding: 15px; width: 100px; text-align: center; }
+        .printer-name { font-weight: bold; margin-bottom: 10px; color: #fff; text-decoration: none; }
+        .status { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto; }
+        .available { background-color: rgb(0, 255, 0); }
+        .printing { background-color: rgb(255, 187, 0); }
+        .offline { background-color: red; }
+        .print-time { color: rgb(255, 187, 0); margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Printer Status Data</h1>
+
+    <div id="printers">
+        <br> <br> <br>
+        <h2>VG2</h2>
+        <br> <br> <br> 
+        <div id="printers-vg2" class="printers-group"></div>
+
+        <br> <br> <br>
+        <h2>VG3</h2>
+        <br> <br> <br>
+        <div id="printers-vg3" class="printers-group"></div>
+    </div>
+
+    <script>
+        const printerGroups = {
+            vg2: Array.from({length: 8}, (_, i) => `10.13.37.${i + 20}`),
+            vg3: Array.from({length: 3}, (_, i) => `10.13.37.${i + 28}`)
+        };
+
+        const apiKeys = {
+            "10.13.37.20": "3CA1B4B35D444A9391F5D06E9D55EC98",
+            "10.13.37.21": "E1ADE189B202428EAF1D1412A67E8FC4",
+            "10.13.37.22": "4575C485FF45410CAB86C60560603A25",
+            "10.13.37.23": "38992E08E1234AA4A709A6CE6EB295AD",
+            "10.13.37.24": "AC2541FFEF6947A48E037AAF5C0087CA",
+            "10.13.37.25": "999C572FC32A423DBC102A2E56FF4B43",
+            "10.13.37.26": "82A8DEC1ADA8468DBF91C2ED8CEC6D9C",
+            "10.13.37.27": "AF2764D18ACA466280057540C9E7D5DD",
+            "10.13.37.28": "2A016EA7538C4959AB7A4EEE697A9DF9",
+            "10.13.37.29": "D82869C463154A2B96A9BCC39175C512",
+            "10.13.37.30": "334B696B37144FEF955BDFCDABA9BC96"
+        };
+
+        function getStatusClass(status) {
+            if (status === 'available') return 'available';
+            if (status === 'printing') return 'printing';
+            return 'offline';
+        }
+
+        function fetchPrintTimeLeft(ip) {
+            return fetch(`http://${ip}/api/job`, {
+                headers: { 'X-Api-Key': apiKeys[ip] }
+            })
+            .then(response => response.json())
+            .then(data => data.progress && data.progress.printTimeLeft)
+            .catch(() => null); // Return null if there's an error or no data
+        }
+
+        function fetchPrinterStatus(ip) {
+            fetch(`http://${ip}/api/printer`, {
+                headers: { 'X-Api-Key': apiKeys[ip] }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const status = data.state.flags.printing ? 'printing' : data.state.flags.ready ? 'available' : 'offline';
+                document.getElementById(`status-${ip}`).className = `status ${getStatusClass(status)}`;
+
+                // Fetch remaining print time if printing
+                if (status === 'printing') {
+                    fetchPrintTimeLeft(ip).then(remainingTime => {
+                        if (remainingTime !== null) {
+                            const hours = Math.floor(remainingTime / 3600);
+                            const minutes = Math.floor((remainingTime % 3600) / 60);
+                            document.getElementById(`time-${ip}`).textContent = `${hours}t ${minutes}m`;
+                        } else {
+                            document.getElementById(`time-${ip}`).textContent = '';
+                        }
+                    });
+                } else {
+                    document.getElementById(`time-${ip}`).textContent = '';
+                }
+            })
+            .catch(() => {
+                document.getElementById(`status-${ip}`).className = 'status offline';
+                document.getElementById(`time-${ip}`).textContent = '';
+            });
+        }
+
+        function displayPrinters(groupId, printerIPs) {
+            const groupContainer = document.getElementById(`printers-${groupId}`);
+            printerIPs.forEach(ip => {
+                groupContainer.innerHTML += `
+                    <div class="printer">
+                        <a href="http://${ip}" target="_blank" class="printer-name">Printer ${ip.split('.')[3]}</a><br>
+                        <div id="status-${ip}" class="status offline"></div>
+                        <div id="time-${ip}" class="print-time"></div>
+                    </div>`;
+            });
+            setInterval(() => printerIPs.forEach(fetchPrinterStatus), 9000);
+        }
+
+        displayPrinters('vg2', printerGroups.vg2);
+        displayPrinters('vg3', printerGroups.vg3);
+
+        let countdown = 9;
+        function updateCountdown() {
+            document.getElementById("countdown").textContent = countdown;
+            countdown = countdown > 1 ? countdown - 1 : 9;
+        }
+        setInterval(updateCountdown, 900);
+    </script>
+
+    <br> <br> <br> <br> <br> <br> <br> <br>
+    <h3 style="text-align: center; margin-top: 20px;">Oppdateres automatisk om <span id="countdown">9</span> sekund</h3>
+    <p style="text-align: center; margin-top: 20px;">PS: Mulig tid igjen av print ikke er riktig ved start av print!</p>
+</body>
+</html>
