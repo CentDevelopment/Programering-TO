@@ -12,7 +12,7 @@ onboard_led = machine.Pin(25, machine.Pin.OUT)
 onboard_led.value(1)  # Slå på innebygd LED
 
 # Funksjon for å sette farge på LED-stripen med redusert lysstyrke
-def set_color(r, g, b, brightness=0.1):
+def set_color(r, g, b, brightness=0.2):
     scaled_r = int(r * brightness)
     scaled_g = int(g * brightness)
     scaled_b = int(b * brightness)
