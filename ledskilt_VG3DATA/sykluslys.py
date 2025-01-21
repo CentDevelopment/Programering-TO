@@ -1,21 +1,24 @@
 import machine
 import neopixel
 import time
+import random
 
-# Konfigurer WS2812B LED-stripen
-LED_PIN = 15         # GPIO 15 til DIN på LED-stripen
-NUM_LEDS = 432       # Antall LEDs på stripen
+LED_PIN = 15
+NUM_LEDS = 360
 np = neopixel.NeoPixel(machine.Pin(LED_PIN), NUM_LEDS)
+BRIGHTNESS_DEFAULT = 0.4
+BRIGHTNESS_RED = 0.6
+COLORS = {
+    "red": (255, 0, 0),
+    "green": (0, 255, 0),
+    "blue": (0, 0, 255),
+    "cyan": (0, 255, 255),
+    "magenta": (255, 0, 255),
+    "yellow": (255, 255, 0),
+    "white": (255, 255, 255)
+}
 
-# Konfigurer innebygd LED (GPIO 25)
-onboard_led = machine.Pin(25, machine.Pin.OUT)
-onboard_led.value(1)  # Slå på innebygd LED
-
-# Lysstyrke
-BRIGHTNESS = 0.1
-
-# Funksjon for å sette farge på hele LED-stripen med redusert lysstyrke
-def set_color(r, g, b, brightness=BRIGHTNESS):
+def set_color(r, g, b, brightness=BRIGHTNESS_DEFAULT):
     scaled_r = int(r * brightness)
     scaled_g = int(g * brightness)
     scaled_b = int(b * brightness)
@@ -23,11 +26,9 @@ def set_color(r, g, b, brightness=BRIGHTNESS):
         np[i] = (scaled_r, scaled_g, scaled_b)
     np.write()
 
-# Funksjon for å slå av alle lys
 def clear():
     set_color(0, 0, 0)
 
-# Syklus 1: Rullende regnbue
 def rolling_rainbow(duration=10):
     start_time = time.time()
     while time.time() - start_time < duration:
@@ -40,7 +41,6 @@ def rolling_rainbow(duration=10):
             time.sleep(0.05)
     clear()
 
-# Funksjon for å generere farger til regnbue
 def wheel(pos):
     pos = 255 - pos
     if pos < 85:
@@ -51,53 +51,76 @@ def wheel(pos):
     pos -= 170
     return (pos * 3, 255 - pos * 3, 0)
 
-# Syklus 2: Pulserende rødt
-def pulsing_red(duration=10):
+def pulsing_colors(duration=5):
     start_time = time.time()
+    color_list = list(COLORS.values())
+    color = random.choice(color_list)
     while time.time() - start_time < duration:
-        for brightness in range(0, 101, 5):
-            set_color(255, 0, 0, brightness / 100 * BRIGHTNESS)
-            time.sleep(0.05)
-        for brightness in range(100, -1, -5):
-            set_color(255, 0, 0, brightness / 100 * BRIGHTNESS)
-            time.sleep(0.05)
+        brightness = 0
+        increasing = True
+        while True:
+            set_color(*color, brightness / 100 * BRIGHTNESS_DEFAULT)
+            time.sleep(0.01)
+            if increasing:
+                brightness += 1
+                if brightness >= 100:
+                    increasing = False
+            else:
+                brightness -= 1
+                if brightness <= 0:
+                    break
     clear()
 
-# Syklus 3: Løpende grønt lys
-def running_green(duration=10):
+def running_multicolor_bounce_45_led(duration=10):
     start_time = time.time()
+    color_list = list(COLORS.values())
+    color = random.choice(color_list)
+    while time.time() - start_time < duration:
+        for i in range(NUM_LEDS - 45):
+            for j in range(45):
+                np[i + j] = tuple(int(c * BRIGHTNESS_DEFAULT) for c in color)
+            np.write()
+            time.sleep(0.000025)
+            for j in range(45):
+                np[i + j] = (0, 0, 0)
+
+        for i in range(NUM_LEDS - 45, -1, -1):
+            for j in range(45):
+                np[i + j] = tuple(int(c * BRIGHTNESS_DEFAULT) for c in color)
+            np.write()
+            time.sleep(0.000025)
+            for j in range(45):
+                np[i + j] = (0, 0, 0)
+    clear()
+
+def running_light_with_trail_multicolor(duration=10):
+    start_time = time.time()
+    color_list = list(COLORS.values())
+    color = random.choice(color_list)
     while time.time() - start_time < duration:
         for i in range(NUM_LEDS):
-            np[i] = (0, int(255 * BRIGHTNESS), 0)
+            np[i] = tuple(int(c * BRIGHTNESS_DEFAULT) for c in color)
             np.write()
             time.sleep(0.01)
-            np[i] = (0, 0, 0)
-    clear()
 
-# Syklus 4: Blinkende lys
-def blinking_lights(duration=10):
-    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0)]
-    start_time = time.time()
-    while time.time() - start_time < duration:
-        for color in colors:
-            set_color(*color, brightness=BRIGHTNESS)
-            time.sleep(0.5)
-            clear()
-            time.sleep(0.5)
+        for i in range(NUM_LEDS - 1, -1, -1):
+            np[i] = (0, 0, 0)
+            np.write()
+            time.sleep(0.01)
     clear()
 
 # Hovedloop
 while True:
     rolling_rainbow()
-    time.sleep(1)
-    pulsing_red()
-    time.sleep(1)
-    running_green()
-    time.sleep(1)
-    blinking_lights()
-    time.sleep(1)
+    time.sleep(0.1)
+    pulsing_colors()
+    time.sleep(0.1)
+    running_multicolor_bounce_45_led()
+    time.sleep(0.1)
+    running_light_with_trail_multicolor()
+    time.sleep(0.1)
 
     # Blått lys i 10 sekunder før restart
-    set_color(0, 0, 255, brightness=BRIGHTNESS)
+    set_color(0, 0, 255, brightness=BRIGHTNESS_DEFAULT)
     time.sleep(10)
     clear()
