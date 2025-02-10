@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<unattend xmlns="urn:schemas-microsoft-com:unattend">
+    <settings pass="windowsPE">
+        <component name="Microsoft-Windows-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <OSImage>
+                <InstallFrom>
+                    <MetaData wcm:action="add">
+                        <Key>/Image/Name</Key>
+                        <Value>Windows 10 Pro</Value>
+                    </MetaData>
+                </InstallFrom>
+            </OSImage>
+            <UserData>
+                <AcceptEula>true</AcceptEula>
+                <FullName>Administrator</FullName>
+                <Organization>Nodo.local</Organization>
+            </UserData>
+            <ImageInstall>
+                <OSImage>
+                    <InstallTo>
+                        <DiskID>0</DiskID>
+                        <PartitionID>1</PartitionID>
+                    </InstallTo>
+                    <InstallFrom>
+                        <MetaData wcm:action="add">
+                            <Key>/Image/Name</Key>
+                            <Value>Windows Server 2022 Datacenter (Desktop Experience)</Value>
+                        </MetaData>
+                    </InstallFrom>
+                </OSImage>
+            </ImageInstall>
+            <RunSynchronous>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>1</Order>
+                    <Path>powershell -ExecutionPolicy Bypass -File C:\server-setup.ps1</Path>
+                </RunSynchronousCommand>
+                <RunSynchronousCommand wcm:action="add">
+                    <Order>2</Order>
+                    <Path>powershell -ExecutionPolicy Bypass -File C:\client-setup.ps1</Path>
+                </RunSynchronousCommand>
+            </RunSynchronous>
+        </component>
+    </settings>
+    <settings pass="oobeSystem">
+        <component name="Microsoft-Windows-Shell-Setup" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <UserAccounts>
+                <LocalAccounts>
+                    <LocalAccount wcm:action="add">
+                        <Name>Bruker</Name>
+                        <Password>
+                            <Value>Admin:123</Value>
+                            <PlainText>true</PlainText>
+                        </Password>
+                        <DisplayName>Bruker</DisplayName>
+                        <Group>Administrators</Group>
+                        <PasswordHint>StandardPassord</PasswordHint>
+                    </LocalAccount>
+                </LocalAccounts>
+            </UserAccounts>
+            <OOBE>
+                <HideEULAPage>true</HideEULAPage>
+                <HideLocalAccountScreen>true</HideLocalAccountScreen>
+                <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+                <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+                <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+                <ProtectYourPC>3</ProtectYourPC>
+                <SkipMachineOOBE>true</SkipMachineOOBE>
+                <SkipUserOOBE>true</SkipUserOOBE>
+            </OOBE>
+            <TimeZone>W. Europe Standard Time</TimeZone>
+            <RegisteredOwner>Nodo.local</RegisteredOwner>
+            <RegisteredOrganization>Nodo.local</RegisteredOrganization>
+            <ComputerName>CLI-DF-W10</ComputerName>
+        </component>
+    </settings>
+    <RunSynchronous>
+        <RunSynchronousCommand wcm:action="add">
+            <Order>1</Order>
+            <Description>Server Setup Script</Description>
+            <Path>powershell -ExecutionPolicy Bypass -File C:\server-setup.ps1</Path>
+        </RunSynchronousCommand>
+        <RunSynchronousCommand wcm:action="add">
+            <Order>2</Order>
+            <Description>Client Setup Script</Description>
+            <Path>powershell -ExecutionPolicy Bypass -File C:\client-setup.ps1</Path>
+        </RunSynchronousCommand>
+    </RunSynchronous>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-TCPIP" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <Interfaces>
+                <Interface wcm:action="add">
+                    <Identifier>Ethernet_Server</Identifier>
+                    <IPAddress>10.13.37.45</IPAddress>
+                    <SubnetMask>255.255.255.0</SubnetMask>
+                </Interface>
+                <Interface wcm:action="add">
+                    <Identifier>Ethernet_Client</Identifier>
+                    <IPAddress>10.13.37.49</IPAddress>
+                    <SubnetMask>255.255.255.0</SubnetMask>
+                    <DNSServer>10.13.37.45</DNSServer>
+                </Interface>
+            </Interfaces>
+        </component>
+    </settings>
+    <settings pass="specialize">
+        <component name="Microsoft-Windows-WorkstationService" processorArchitecture="amd64" publicKeyToken="31bf3856ad364e35" language="neutral" versionScope="nonSxS">
+            <JoinDomain>Nodo.local</JoinDomain>
+            <DomainAccount>
+                <Username>administrator</Username>
+                <Password>Admin:123</Password>
+            </DomainAccount>
+        </component>
+    </settings>
+</unattend>
